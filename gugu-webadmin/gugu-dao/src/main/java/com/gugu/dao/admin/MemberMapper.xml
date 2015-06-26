@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gugu.dao.admin.MemberMapper" >
+  <resultMap id="BaseResultMap" type="com.gugu.models.admin.Member" >
+          <result column="id" property="id"/>
+          <result column="username" property="username"/>
+          <result column="userpassword" property="userpassword"/>
+  </resultMap>
+
+<!-- $!{tableName} table all fields -->
+<sql id="Base_Column_List" >
+	 id,username,userpassword
+</sql>
+
+<!-- 查询条件 -->
+<sql id="Example_Where_Clause">
+where 1=1
+<trim  suffixOverrides="," >
+    <if test="id!=null and id !='' " >
+	    and id = #{id}
+	</if>
+    <if test="username!=null and username !='' " >
+	    and username = #{username}
+	</if>
+    <if test="userpassword!=null and userpassword !='' " >
+	    and userpassword = #{userpassword}
+	</if>
+</trim>
+</sql> 
+
+<!-- 插入记录 -->
+<insert id="insert" parameterType="Object">
+<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+	SELECT LAST_INSERT_ID()
+</selectKey>
+  insert into member(id,username,userpassword)
+ values(#{id},#{username},#{userpassword})
+</insert>
+
+<insert id="insertMap" parameterType="Object">
+<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+	SELECT LAST_INSERT_ID()
+</selectKey>
+  insert into member(id,username,userpassword)
+ values(#{id},#{username},#{userpassword})
+</insert>
+
+ <!-- 修改记录，只修改只不为空的字段 -->
+<update id="update" parameterType="Object" >
+	update member set 
+	<trim  suffixOverrides="," >
+	<if test="username != null  ">
+		username=#{username},
+	</if>
+	<if test="userpassword != null  ">
+		userpassword=#{userpassword},
+	</if>
+	</trim> where id=#{id}
+</update>
+
+<update id="updateMap" parameterType="Object" >
+	update member set 
+	<trim  suffixOverrides="," >
+	<if test="username != null  ">
+		username=#{username},
+	</if>
+	<if test="userpassword != null  ">
+		userpassword=#{userpassword},
+	</if>
+	</trim> where id=#{id}
+</update>
+
+
+<!-- 删除记录 -->
+<delete id="delete" parameterType="Object">
+	delete 	 from member where id = #{id}
+</delete>
+
+<!-- 根据id查询 用户信息表 -->
+<select id="getById"  resultMap="BaseResultMap" parameterType="Object">
+	select <include refid="Base_Column_List" /> 
+	 from member where id = #{id}
+</select>  
+
+<!-- 根据map查询 用户信息表 -->
+<select id="getByMap"  resultMap="BaseResultMap" parameterType="Object">
+	select <include refid="Base_Column_List"/>
+      from member 
+    <include refid="Example_Where_Clause"/>
+</select> 
+
+<!-- 用户信息表 列表总数-->
+<select id="count" resultType="java.lang.Integer"  parameterType="Object">
+	select count(1) from member 
+	<include refid="Example_Where_Clause"/>
+</select>
+
+    
+<!--
+
+	分页查询将传 #offset#,#pageSize# 参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+-->
+
+<select id="list" resultMap="BaseResultMap"  parameterType="Object">
+  	select <include refid="Base_Column_List"/>
+      from member 
+    <include refid="Example_Where_Clause"/>
+    
+    <if test=" null != sortColumns and sortColumns !='' ">
+       order by #{sortColumns}
+    </if> 
+    
+   	<if test=" null != offset">
+		limit #{offset}<if test=" null != pageSize">,#{pageSize}</if>
+	</if>
+    <if test=" null == offset">
+	     limit 50
+    </if>
+</select>
+</mapper>

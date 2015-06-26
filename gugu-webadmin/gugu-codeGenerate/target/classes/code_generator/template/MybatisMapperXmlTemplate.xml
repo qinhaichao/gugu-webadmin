@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.${bussPackage}.dao${javasufixPath}.${className}Mapper" >
+  <resultMap id="BaseResultMap" type="com.${bussPackage}.models${javasufixPath}.${className}" >
+         <#list columnDatas as item>
+          <result column="${item.columnName}" property="${item.propertyName}"/>
+        </#list>
+  </resultMap>
+
+<!-- $!{tableName} table all fields -->
+<sql id="Base_Column_List" >
+	 ${SQL.columnFields}
+</sql>
+
+<!-- 查询条件 -->
+<sql id="Example_Where_Clause">
+where 1=1
+<trim  suffixOverrides="," >
+<#if (columnDatas?size>0)>
+<#list columnDatas as item> 
+   <#assign testStr="${item.propertyName}!=null and ${item.propertyName} !='' "/>  
+    <if test="${testStr}" >
+        <#assign name="{${item.propertyName}}"/>
+	    and ${item.columnName} = #${name}
+	</if>
+</#list>
+</#if>
+</trim>
+</sql> 
+
+<!-- 插入记录 -->
+<insert id="insert" parameterType="Object">
+<#if keyType=='02'>
+<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+	SELECT LAST_INSERT_ID()
+</selectKey>
+</#if>
+  ${SQL.insert}
+</insert>
+
+<insert id="insertMap" parameterType="Object">
+<#if keyType=='02'>
+<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+	SELECT LAST_INSERT_ID()
+</selectKey>
+</#if>
+  ${SQL.insert}
+</insert>
+
+ <!-- 修改记录，只修改只不为空的字段 -->
+<update id="update" parameterType="Object" >
+	${SQL.updateSelective}
+</update>
+
+<update id="updateMap" parameterType="Object" >
+	${SQL.updateSelective}
+</update>
+
+
+<!-- 删除记录 -->
+<delete id="delete" parameterType="Object">
+	${SQL.delete}
+</delete>
+
+<!-- 根据id查询 ${codeName} -->
+<select id="getById"  resultMap="BaseResultMap" parameterType="Object">
+	${SQL.selectById}
+</select>  
+
+<!-- 根据map查询 ${codeName} -->
+<select id="getByMap"  resultMap="BaseResultMap" parameterType="Object">
+	select <include refid="Base_Column_List"/>
+      from ${tableName} 
+    <include refid="Example_Where_Clause"/>
+</select> 
+
+<!-- ${codeName} 列表总数-->
+<select id="count" resultType="java.lang.Integer"  parameterType="Object">
+	select count(1) from ${tableName} 
+	<include refid="Example_Where_Clause"/>
+</select>
+
+    
+<!--
+
+	分页查询将传 #offset#,#pageSize# 参数,不同的数据库可以根于此三个参数属性应用不同的分页实现
+-->
+
+<select id="list" resultMap="BaseResultMap"  parameterType="Object">
+  	select <include refid="Base_Column_List"/>
+      from ${tableName} 
+    <include refid="Example_Where_Clause"/>
+    <if test=" null != sortColumns and sortColumns !='' ">
+       order by #{sortColumns}
+    </if> 
+   	<if test=" null != offset">
+		limit #${r'{offset}'}<if test=" null != pageSize">,#${r'{pageSize}'}</if>
+	</if>
+    <if test=" null == offset">
+	     limit 50
+    </if>
+</select>
+</mapper>

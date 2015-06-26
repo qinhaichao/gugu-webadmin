@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd"
+	default-lazy-init="true">
+	<!--HttpSession-->
+	<bean id="sessionProvider" class="com.gugu.commonServlet.HttpSessionProvider"/>
+	<!--缓存Session
+		<bean id="sessionProvider" class="com.gugu.commonServlet.CacheSessionProvider">
+			<property name="sessionCache" ref="sessionCache"/>
+			<property name="sessionIdGenerator" ref="sessionIdGenerator"/>
+		</bean>
+		-->
+	<!--Memcached缓存
+		<bean id="sessionCache" class="com.gugu.commonServlet.cache.MemcachedDangaCache">		
+			<property name="servers">
+				<list>
+					<value>127.0.0.1:11211</value>
+				</list>
+			</property>
+			<property name="weights">
+				<list>
+					<value>1</value>
+				</list>
+			</property>
+		</bean>
+		-->
+	<!--Ehcache缓存
+		<bean id="sessionCache" class="com.gugu.commonServlet.cache.EhcacheSessionCache">
+			<property name="cache" ref="ehSessionCache"/>
+		</bean>
+		-->
+	<!--SessionId生成器
+		<bean id="sessionIdGenerator" class="com.gugu.utils.JdkUUIDGenerator"/>
+		-->
+	<!-- <bean id="dbFileService" class="com.gugu.service.file.DbFileServiceImpl"/> -->
+	<bean id="realPathResolver" class="com.gugu.utils.springmvc.ServletContextRealPathResolver"/>
+	<bean id="fileRepository" class="com.gugu.utils.upload.FileRepository"/>
+	<!--图片处理-->
+	<bean id="imageScale" class="com.gugu.utils.image.ImageScaleImpl" init-method="init">
+		<property name="tryMagick" value="true"/>
+	</bean>
+	<!--密码加密器-->
+	<bean id="pwdEncoder" class="com.gugu.utils.security.encoder.Md5PwdEncoder"/>
+		
+	<!--文件模板-->
+	<bean id="tplService" class="com.gugu.utils.tpl.FileTplServiceImpl"/>
+
+	<bean id="ipSeeker" class="com.gugu.utils.ipseek.IPSeekerImpl" init-method="init">
+		<property name="dir" value="/WEB-INF/ipseek"/>
+		<property name="filename" value="QQWry.Dat"/>
+	</bean>
+	
+<!-- 	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
+ -->	
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="webBindingInitializer">
+			<bean class="com.gugu.utils.springmvc.BindingInitializer"/>
+		</property>
+	</bean>
+	
+</beans>

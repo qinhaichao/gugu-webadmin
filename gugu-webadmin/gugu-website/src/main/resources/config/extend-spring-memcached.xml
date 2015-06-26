@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>    
+<beans    
+    xmlns="http://www.springframework.org/schema/beans"    
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"    
+    xsi:schemaLocation="http://www.springframework.org/schema/beans     
+    http://www.springframework.org/schema/beans/spring-beans-2.5.xsd ">    
+    <!--memcached 客户端 SocketPool-->    
+    <bean id="memcachedPool" class="com.danga.MemCached.SockIOPool" factory-method="getInstance" init-method="initialize" destroy-method="shutDown">      
+        <constructor-arg><value>neeaMemcachedPool</value></constructor-arg>  
+        <property name="servers">   
+            <list>    
+                <value>10.99.121.61:7654</value>
+                <value>10.99.121.62:7654</value> 
+            </list>    
+        </property>    
+        <!--多服务器负载均衡-->  
+        <!-- <property name="weights">
+            <value>1</value>
+        </property> -->
+        <property name="weights">   
+			<list>    
+                <value>1</value>
+                <value>1</value>   
+            </list>   
+        </property>
+        <property name="initConn">    
+            <value>5</value>    
+        </property>    
+        <property name="minConn">    
+            <value>5</value>    
+        </property>
+        <property name="maxConn">    
+            <value>250</value>    
+        </property>    
+        <property name="maintSleep">    
+            <value>30</value>    
+        </property>    
+        <property name="nagle">    
+            <value>false</value>    
+        </property>    
+        <property name="maxIdle">    
+            <value>6000</value>    
+        </property>    
+        <property name="socketTO">  
+            <value>3000</value>  
+        </property>    
+    </bean>  
+        
+    <!--memcached client-->    
+    <bean id="memCachedClient" class="com.danga.MemCached.MemCachedClient">    
+        <constructor-arg>
+            <value>neeaMemcachedPool</value>
+        </constructor-arg>   
+    </bean>
+    <!--memcached 客户端***end-->    
+  
+    
+</beans> 

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+	http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+	http://www.springframework.org/schema/tx 
+	http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+	http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.2.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+	"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	
+	default-lazy-init="false">
+	<context:annotation-config/>
+	<!--  master dataSource config -->	
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${jdbc.driverClassName}" />
+		<property name="jdbcUrl" value="${master.jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="autoCommitOnClose" value="true" />
+		<property name="checkoutTimeout" value="${cpool.checkoutTimeout}" />
+		<property name="minPoolSize" value="${cpool.minPoolSize}" />
+		<property name="maxPoolSize" value="${cpool.maxPoolSize}" />
+		<property name="maxIdleTime" value="${cpool.maxIdleTime}" />
+		<property name="acquireIncrement" value="${cpool.acquireIncrement}" />
+		<property name="maxIdleTimeExcessConnections" value="${cpool.maxIdleTimeExcessConnections}" />
+       <!--定义所有连接测试都执行的测试语句。在使用连接测试的情况下这个显著提高测试速度。默认null-->   
+        <property name="preferredTestQuery" value="select 1" />   
+         <!--每2个小时检查所有连接池中的空闲连接，这个值一定要小于MySQL的wait_timeout时间，默认为8小时。默认0 -->   
+          <property name="idleConnectionTestPeriod" value="7200"/>
+	</bean>
+	
+	<!--  read dataSource config  start-->
+	<!--  read dataSource config  reader0 -->
+	<bean id="dataSourceReader0" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${jdbc.driverClassName}" />
+		<property name="jdbcUrl" value="${reader0.jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="autoCommitOnClose" value="true" />
+		<property name="checkoutTimeout" value="${cpool.checkoutTimeout}" />
+		<property name="minPoolSize" value="${cpool.minPoolSize}" />
+		<property name="maxPoolSize" value="${cpool.maxPoolSize}" />
+		<property name="maxIdleTime" value="${cpool.maxIdleTime}" />
+		<property name="acquireIncrement" value="${cpool.acquireIncrement}" />
+		<property name="maxIdleTimeExcessConnections" value="${cpool.maxIdleTimeExcessConnections}" />
+       <!--定义所有连接测试都执行的测试语句。在使用连接测试的情况下这个显著提高测试速度。默认null-->   
+        <property name="preferredTestQuery" value="select 1" />   
+         <!--每2个小时检查所有连接池中的空闲连接，这个值一定要小于MySQL的wait_timeout时间，默认为8小时。默认0 -->   
+          <property name="idleConnectionTestPeriod" value="7200"/>
+	</bean>
+	
+	
+	<!--  read dataSource config  end-->
+	
+    <bean id="multipleDataSource" class="com.gugu.dataSource.mybatis.MultipleDataSource">
+         <property name="defaultTargetDataSource" ref="dataSource"/>
+         <property name="targetDataSources">
+             <map>     
+                 <!-- 注意这里的value是和上面的DataSource的id对应，key要和下面的CustomerContextHolder中的常量对应 -->
+                 <entry value-ref="dataSource" key="master"/>
+                 <entry value-ref="dataSourceReader0" key="reader0"/>
+             </map>
+         </property>
+     </bean>
+	 
+	<bean id="lobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler"
+		lazy-init="true" />
+	
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="find*" read-only="true" />
+			<tx:method name="initIndex" read-only="true"/>
+			<tx:method name="select*" read-only="true" />
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="query*" read-only="true" />
+			<tx:method name="list*" read-only="true" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="insert*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="modify*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="remove*" propagation="REQUIRED" />
+			<tx:method name="*" propagation="REQUIRED" rollback-for="Exception" />
+			<!-- 如果不是以上三种，则配置成只读事务(如select)。只读事务可以提高性能，当更新某个对象时，将不会再做脏数据检查。(因为是只读的并不用更新，所以不用再作比较,判断是否读取到脏数据。)  -->
+		</tx:attributes>
+	</tx:advice>
+
+	<!--proxy-target-class="true" -->
+	
+	<aop:config>
+		<aop:advisor pointcut="execution(* com.gugu.service..*.*(..))"
+			advice-ref="txAdvice" />
+	</aop:config>
+	
+	 
+	<!-- 配置SqlSessionFactoryBean -->
+     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+         <property name="dataSource" ref="multipleDataSource"/>
+         <!-- mapper和resultmap配置路径 --> 
+         <property name="mapperLocations">
+             <list>
+                 <!-- 表示在com.gugu.dataAccess目录下的任意包下，以*Mapper.xml结尾所有文件 --> 
+                 <value>classpath:com/gugu/dao/*/*Mapper.xml</value>
+             </list>
+         </property>
+     </bean>
+     
+     <!-- 通过扫描的模式，扫描目录在com/gugu/任意目录下 -->
+     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+         <property name="basePackage" value="com.gugu.dao**" />
+     </bean> 
+	 
+	 <context:component-scan base-package="com.gugu" />
+	
+     
+     <!-- 启用Aop AspectJ注解 -->
+     <aop:aspectj-autoproxy/>
+	 
+</beans>

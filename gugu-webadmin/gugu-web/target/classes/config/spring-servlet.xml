@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/util
+		http://www.springframework.org/schema/util/spring-util-3.2.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+    <mvc:annotation-driven />  
+	<!-- 只扫描控制层 -->
+	<context:component-scan base-package="com.gugu.*" />
+
+	<!-- default  view config -->
+	<!--  
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix">
+			<value>/view/</value>
+		</property>
+		<property name="suffix">
+			<value>.html</value>
+		</property>
+		
+	</bean>
+     -->
+    
+    
+    <!-- <property name="prefix" value="/views/"/>  --> 
+     <!-- 
+     <bean id="freemarkerViewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">  
+        <property name="order" value="1"/>  
+        <property name="suffix" value=".html"/>  
+        <property name="contentType" value="text/html;charset=utf-8"/>  
+        <property name="viewClass">  
+            <value>org.springframework.web.servlet.view.freemarker.FreeMarkerView</value>  
+        </property>  
+        <property name="requestContextAttribute" value="rc" />
+		<property name="exposeRequestAttributes" value="false" />
+		<property name="exposeSessionAttributes" value="false" />
+		<property name="exposeSpringMacroHelpers" value="true" />
+    </bean>  
+    -->
+      
+	<!-- freemarker view config -->
+	<!-- 
+		exposeRequestAttributes  exposeSessionAttributes两个属性都被设置为true。
+		结果是请求和会话属性都被复制到模板的属性集中，可以使用FreeMarker的表达式语言来访问并显示。
+                    使用这些宏，必须设置FreeMarkerViewResolver的exposeSpringMacroHelpers属性为true：
+		 -->
+	 <!-- 这个配置后，在freemarker可以使用contextpath --> 
+	 <!-- 此变量值为pageContext.request, 页面使用方法：rc.contextPath --> 
+ 
+	<bean id="freemarkerViewResolver" class="com.gugu.utils.springmvc.SimpleFreeMarkerViewResolver">
+		 <property name="prefix">
+			<value>/www/</value>
+		</property>
+		<property name="suffix">
+			<value>.html</value>
+		</property>
+		<property name="contentType" value="text/html; charset=UTF-8" />
+		<property name="requestContextAttribute" value="rc" />
+		<property name="exposeRequestAttributes" value="false" />
+		<property name="exposeSessionAttributes" value="false" />
+		<property name="exposeSpringMacroHelpers" value="true" />
+	</bean>
+
+	
+	<bean id="freemarkerConfig"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<!--获取标签配置 -->
+		<!-- <property name="freemarkerVariables" value="#{propertyUtils.getBeanMap('directive.')}" /> -->
+		<!-- <property name="templateLoaderPath" value="D:/litworkspace/lenovoworkspace/gugu-webadmin/gugu-web/src/main/webapp/WEB-INF/views/" /> -->
+		<property name="templateLoaderPath" value="" />
+		<property name="freemarkerSettings">
+			<props>
+				<prop key="tag_syntax">auto_detect</prop>
+				<prop key="template_update_delay">5</prop>
+				<prop key="defaultEncoding">UTF-8</prop>
+				<prop key="url_escaping_charset">UTF-8</prop>
+				<prop key="locale">zh_CN</prop>
+				<prop key="boolean_format">true,false</prop>
+				<prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
+				<prop key="date_format">yyyy-MM-dd</prop>
+				<prop key="time_format">HH:mm:ss</prop>
+				<prop key="number_format">0.######</prop>
+				<prop key="whitespace_stripping">true</prop>
+				<!--空值处理 -->
+				<prop key="classic_compatible">true</prop>
+				<!-- 
+				<prop key="auto_import">/ftl/jeecms/index.ftl as
+					p,/ftl/spring.ftl as s
+				</prop> -->
+				
+				<prop key="template_exception_handler">ignore</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- SpringMVC上传文件时，需要配置MultipartResolver处理器 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="UTF-8" />
+		<!-- 指定所上传文件的总大小不能超过6.5M。注意maxUploadSize属性的限制不是针对单个文件，而是所有文件的容量之和 -->
+		<property name="maxUploadSize" value="6815744" />
+	</bean>
+	<!-- SpringMVC在超出上传文件限制时，会抛出org.springframework.web.multipart.MaxUploadSizeExceededException -->
+	<!-- 该异常是SpringMVC在检查上传的文件信息时抛出来的，而且此时还没有进入到Controller方法中 -->
+	<bean id="exceptionResolver"
+		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+				<!-- 遇到MaxUploadSizeExceededException异常时，自动跳转到/WEB-INF/view/error_fileupload.jsp页面 -->
+				<prop
+					key="org.springframework.web.multipart.MaxUploadSizeExceededException">/common/500.html</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- ResponseBody 编码 -->
+	<bean
+		class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="messageConverters">
+			<list>
+				<bean
+					class="org.springframework.http.converter.StringHttpMessageConverter">
+					<property name="supportedMediaTypes">
+						<list>
+							<value>text/plain;charset=UTF-8</value>
+						</list>
+					</property>
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<bean
+		class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" />
+
+</beans>
+
+
+

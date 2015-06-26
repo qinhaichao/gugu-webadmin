@@ -1,0 +1,224 @@
+<!DOCTYPE HTML>
+<html>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="description" content="联想EPP搜索数据展示" />
+	<meta name="author" content="" />
+	
+	<title>EPP搜索商品主页</title>  
+    <link rel="stylesheet" type="text/css" href="http://test.le.com/static/style/css/common.css">
+    <link rel="stylesheet" href="http://test.le.com/static/css/searchepp/style.css">  
+    <link rel="stylesheet" href="http://test.le.com/static/css/searchepp/pro_list.css"> 
+    <link rel="stylesheet" href="http://test.le.com/static/css/searchepp/pop.css"> 
+	<script type="text/javascript" src="http://test.le.com/static/js/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="http://test.le.com/static/js/searchepp/jquery.twbsPagination.min.js"></script>
+	<script type="text/javascript" src="http://test.le.com/static/js/jquery.tmpl.min.js"></script>
+<script type="text/javascript" src="http://test.le.com/static/style/js/common.js"></script> 
+    <script type="text/javascript" src="http://test.le.com/static/js/searchepp/serachEppUtil.js"></script> 
+	<script type="text/javascript">
+		var keyword="";
+		var gcodes="";
+		var styid =0;
+		var sorp ;
+	    var i =0; 
+		 //价格排序方法
+		    
+		      
+		
+	    //排序的方法
+		function  getproduct(sid,code,key,page){
+		       code = gcodes   //商品类型
+		       key = keyword   //搜索框的内容
+		       styid = sid.substring(sid.length-1)    //排序类型
+
+                
+		         if(2 == styid ){
+		             sorp = 0
+		           i = 0
+		          } 
+		         else if(3 == styid) {
+		               i++ 
+		             if( 1 == i){
+		                sorp = 1 
+		             }else{
+		                if(1 == sorp){
+		                $("#sor3 :nth-child(2)").attr("src","http://test.le.com/static/style/images/pro_list/sanj_b.jpg")
+		                sorp =0 
+		                }else{
+		                $("#sor3 :nth-child(2)").attr("src","http://test.le.com/static/style/images/pro_list/sanj_t.png")
+		                sorp =1 
+		                }
+		             }
+		         }else{
+		           sorp =1
+		           i =0
+		         }
+		       
+	 		$.ajax({
+	        	url:'http://shopt.lenovo.com.cn/search/searchgoodsjsonp.do',
+	        	dataType:'jsonp',
+	        	type:'get',
+	        	data:{
+	        		plat:4,  //当前平台号
+	        		categorycode:code,  
+	        		'keyword':key,    
+	        		sorder:styid, //当前查询的数据
+	        		spage:page?page:1,  //当前页数
+	        		sarry: sorp  //升序降序     1升 0 降
+	        	},
+	        	success:function(data){
+	        	     $("#stype").html(""); 
+	        	     $("#stype").html(decodeURIComponent(data.cname));
+					if (data.rc == 0) {
+					    $("div.pro_list").html("");
+                        $("div.pro_list").html($("#productTmpl").tmpl(data));
+                        $("#eshopnav").html("");
+                        $("#eshopnav").html($("#productNav").tmpl(data));
+                         
+                         //当获取数据为空时 不显示分页
+                          if(null == data.glist ){
+                          $("div.pro_list").html("");
+                          $("div.pro_list").html(ShowNoDate("暂时没有您要查看的产品,敬请期待！！！"));
+                          return  false;
+                          }
+                        if(!$('#pagination').data('page')){
+                        	$('#pagination').data('page',true);
+			    	        $('#pagination').twbsPagination({
+			           			totalPages: data.gpagecount?data.gpagecount:1,
+			          			visiblePages: 7,
+			           			onPageClick: function (event, page) {
+			           			     /**
+			           			       *sid   当前查询类型
+			           			       *keyword 通过查询框来的值
+			           			       *gcodes  通过类型选择
+			           			       *可以同时存在
+			           			       */
+			           			     if(""!= keyword || ""!=gcodes){
+		            				 getproduct(styid,gcodes,keyword,page);
+			          			   }
+			          			}
+			       			});
+                        }
+                         
+                    } else {
+                        $("div.pro_list").html("");
+                        $('div.pro_list').html(ShowNoDate("暂时没有您要查看的产品,敬请期待！！！"));
+                        $("#eshopnav").html("");
+                        $("#eshopnav").html($("#productNav").tmpl(data));
+                    }
+	        	}
+	        });
+		     
+		}
+	    //页面初始化数据  
+	    
+	    $(document).ready(function() {
+	        gcodes    = $.getUrlParam('code');   //根据商品类型搜索的值
+	    	keyword = $.getUrlParam('keyword');   //直接在商品搜索框传的值
+	    	  if(keyword){
+	    	    $(".ns_s-combobox-input").val(keyword);
+	    	  }
+ 
+	    	if(""!= keyword || ""!=gcodes){
+	        	getproduct("sor0",gcodes,encodeURIComponent(keyword));
+            }
+
+	    });
+	</script>
+	<script type="text/x-jquery-tmpl" id="productTmpl">
+		{{each(i,p) glist}}
+		<div class="pro_show">
+            <ul>
+                <li class="show_pro"><img src="{{= p.gpath}}"/></li>
+                <li style="height:1.5em;">{{= p.gname}}</li>
+                <li class="show_price clearfix">
+                    <span class="red">{{= p.gprice}}</span>
+                    <em>已有<i class="red">{{= p.gbnnum}}</i>人购买</em>
+                </li>
+                <li class="show_btn clearfix">
+                    <a href="" class="collect"><img src="http://test.le.com/static/style/images/pro_list/star.png" width="17" height="17"><span>收藏</span></a>
+                    <a class="car red_bg" href="javascript:void(0);"><img src="http://test.le.com/static/style/images/pro_list/car_3.png" width="17" height="16"><span>加入购物车</span></a>
+                </li>
+            </ul>   
+        </div>
+        {{/each}}
+	</script>
+	<script type="text/x-jquery-tmpl" id="productNav">
+	      {{each(i,n) vcategorylist}}
+	      <table>
+            <tr>
+              <td width="122"> 
+                <span class="red">{{= n.name}}</span>
+              </td>
+              
+              <td>
+                <span><a href="" class="active">全部</a></span>
+                 {{each(j,m) n.sublist}}
+                <span><a href="">{{= m.name}}</a></span>
+                 {{/each}}
+              </td>
+             
+            </tr>
+        </table>
+	      {{/each}}
+	</script>
+	<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+	<script type="text/javascript">
+		$(function(){
+			$("#index_top").load("index_top.html");
+			$("#index_hander").load("index_hander.html");
+			$("#foot").load("foot.html");
+		});
+	</script>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+</head>
+  <body class="ns_body">   
+  	<div id="index_top"></div>
+	<div id="index_hander"></div>
+	     
+ <!--查询展示页面-start -->
+<div id="content">
+  <div class="main_box w1200 clearfix">
+    <div class="location clearfix">
+        <div class="location_left">
+          <a href="javascript:void(0);">首页</a>><a href="javascript:void(0);"><span id="stype"></span></a>
+        </div>
+        <div class="location_right">
+          <a href="javascript:void(0);">Lenovo推荐使用windows</a>
+        </div>
+    </div>
+    <!-- 产品列表导航 start -->
+    <div class="pro_category" id="eshopnav">
+        
+    </div><!-- 产品列表导航 end -->
+     
+    <div class="sequence w1200">
+        <ul>
+            <li><a href="javascript:void(0);">排序：</a></li>
+            <li id="sor0"  onclick="getproduct(this.id)"><a href="javascript:void(0);"><span >默认</span></a></li>
+            <li id="sor2"  onclick="getproduct(this.id)"><a href="javascript:void(0);"><span >销量</span></a><img src="http://test.le.com/static/style/images/pro_list/sanj_b.jpg"/></li>
+            <li id="sor3"  onclick="getproduct(this.id)"><a href="javascript:void(0);"><span>价格</span></a><img src="http://test.le.com/static/style/images/pro_list/sanj_t.png"/></li>
+            <li id="sor1"  onclick="getproduct(this.id)"><a href="javascript:void(0);"><span >最新</span></a></li>
+        </ul>
+    </div>
+    <div class="pro_list clearfix">
+     
+    </div><!-- 产品列表 end -->
+   
+	<div>
+		<ul id="pagination" class="pagination-sm"></ul>
+	</div>
+	
+</div> 
+</div> 
+    <div id="foot"></div>
+</body> 
+     
+</html>
